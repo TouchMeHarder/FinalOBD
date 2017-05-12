@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane id="AnchorPane" prefHeight="447.0" prefWidth="725.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.111" fx:controller="proyectoobd_final_v1.FXMLDocumentController">
+   <children>
+      <TabPane layoutX="-4.0" prefHeight="449.0" prefWidth="725.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <tabs>
+          <Tab text="Conexiones">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <ImageView fitHeight="176.0" fitWidth="343.0" layoutX="14.0" layoutY="44.0" pickOnBounds="true" preserveRatio="true" AnchorPane.bottomAnchor="255.3219985961914" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="368.0" AnchorPane.topAnchor="44.0">
+                           <image>
+                              <Image url="@../Recursos/logo.png" />
+                           </image>
+                        </ImageView>
+                        <ListView layoutX="422.0" layoutY="63.0" prefHeight="255.0" prefWidth="266.0" AnchorPane.bottomAnchor="100.0" AnchorPane.leftAnchor="422.0" AnchorPane.rightAnchor="37.0" AnchorPane.topAnchor="63.0" />
+                        <Label layoutX="422.0" layoutY="36.0" text="Dispositivos bluetooth" AnchorPane.leftAnchor="422.0" AnchorPane.rightAnchor="184.0" AnchorPane.topAnchor="36.0" />
+                     </children>
+                  </AnchorPane>
+            </content>
+          </Tab>
+          <Tab text="Untitled Tab 2">
+            <content>
+              <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+            </content>
+          </Tab>
+            <Tab text="Untitled Tab">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              </content>
+            </Tab>
+            <Tab text="Untitled Tab">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+              </content>
+            </Tab>
+        </tabs>
+      </TabPane>
+   </children>
+</AnchorPane>
