@@ -8,6 +8,7 @@ package proyectoobd_final_v1;
 import Graficos.MedidorRPM;
 import Logica.BuscarDispositivos;
 import Logica.HiloBusquedaDisp;
+import Logica.HiloBusquedaServ;
 import eu.hansolo.medusa.Gauge;
 import java.net.URL;
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.StackPane;
+import javax.bluetooth.RemoteDevice;
 
 /**
  *
@@ -31,9 +33,10 @@ import javafx.scene.layout.StackPane;
  */
 public class FXMLDocumentController implements Initializable {
 
-    MedidorRPM gauge;
-    BuscarDispositivos bd;
+    private MedidorRPM gauge;
     private ArrayList dispositivos;
+    
+    private String nombreDisp;
     
     private ObservableList<String> itemsListaDisp = FXCollections.observableArrayList();
     private ObservableList<String> itemsListaServ = FXCollections.observableArrayList();
@@ -59,7 +62,19 @@ public class FXMLDocumentController implements Initializable {
     
     @FXML
     public void listaServ() {
+        int i = listaDisp.getSelectionModel().getSelectedIndex();
         
+        RemoteDevice rd = (RemoteDevice) dispositivos.get(i);
+        
+        nombreDisp = rd.getBluetoothAddress();
+        
+        HiloBusquedaServ hilo = new HiloBusquedaServ(nombreDisp);
+        
+        hilo.start();
+        
+        itemsListaServ.add(hilo.getServicio());
+        
+        listaServ.setItems(itemsListaServ);
     }
 
     @FXML
@@ -69,6 +84,8 @@ public class FXMLDocumentController implements Initializable {
         hilo.start();
         
         itemsListaDisp = hilo.getLista();
+        
+        dispositivos = hilo.getDispositivos();
         
         listaDisp.setItems(itemsListaDisp);
     }
