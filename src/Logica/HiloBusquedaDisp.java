@@ -58,5 +58,9 @@ public class HiloBusquedaDisp extends Thread {
     public ObservableList<String> getLista() {
         return items;
     }
+    
+    public ArrayList getDispositivos() {
+        return dispositivos;
+    }
 
 }

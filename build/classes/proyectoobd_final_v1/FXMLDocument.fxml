@@ -26,7 +26,7 @@
                               <Image url="@../Recursos/logo.png" />
                            </image>
                         </ImageView>
-                        <ListView fx:id="listaDisp" layoutX="14.0" layoutY="53.0" prefHeight="313.0" prefWidth="266.0" AnchorPane.bottomAnchor="52.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="445.0" AnchorPane.topAnchor="53.0" />
+                        <ListView fx:id="listaDisp" layoutX="14.0" layoutY="53.0" onMouseClicked="#listaServ" prefHeight="313.0" prefWidth="266.0" AnchorPane.bottomAnchor="52.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="445.0" AnchorPane.topAnchor="53.0" />
                         <Label layoutX="14.0" layoutY="26.0" text="Dispositivos bluetooth" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="592.0" AnchorPane.topAnchor="26.0" />
                         <Button layoutX="14.0" layoutY="379.0" mnemonicParsing="false" onAction="#listaDisp" text="Establecer conexion" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="14.0" />
                         <Button fx:id="salir" layoutX="670.0" layoutY="379.0" mnemonicParsing="false" onAction="#salir" text="Salir" AnchorPane.bottomAnchor="14.0" AnchorPane.rightAnchor="16.0" />
