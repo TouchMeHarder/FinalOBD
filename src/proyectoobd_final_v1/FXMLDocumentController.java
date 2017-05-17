@@ -13,8 +13,11 @@ import eu.hansolo.medusa.Gauge;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
@@ -35,65 +38,71 @@ public class FXMLDocumentController implements Initializable {
 
     private MedidorRPM gauge;
     private ArrayList dispositivos;
-    
+
     private String nombreDisp;
-    
+
     private ObservableList<String> itemsListaDisp = FXCollections.observableArrayList();
     private ObservableList<String> itemsListaServ = FXCollections.observableArrayList();
+
+    @FXML Button salir;
+
+    @FXML StackPane panelRPM;
     
-    @FXML
-    Button salir;
+    @FXML AnchorPane fondoRPM;
 
-    @FXML
-    StackPane panelRPM;
+    @FXML ListView listaDisp;
+    @FXML ListView listaServ;
 
-    @FXML
-    AnchorPane fondoRPM;
-
-    @FXML
-    ListView listaDisp;
-    @FXML
-    ListView listaServ;
-    
     @FXML
     public void salir() {
-       System.exit(0);
+        System.exit(0);
     }
-    
+
     @FXML
     public void listaServ() {
-        int i = listaDisp.getSelectionModel().getSelectedIndex();
-        
+        if (dispositivos.isEmpty()) {
+            System.out.println("Esta vasio");
+        } else {
+            System.out.println("No esta vasio");
+        }
+
+        /*int i = listaDisp.getSelectionModel().getSelectedIndex();
+
         RemoteDevice rd = (RemoteDevice) dispositivos.get(i);
-        
+
         nombreDisp = rd.getBluetoothAddress();
-        
+
         HiloBusquedaServ hilo = new HiloBusquedaServ(nombreDisp);
-        
+
         hilo.start();
-        
+
         itemsListaServ.add(hilo.getServicio());
-        
-        listaServ.setItems(itemsListaServ);
+
+        listaServ.setItems(itemsListaServ);*/
     }
 
     @FXML
     public void listaDisp() {
         HiloBusquedaDisp hilo = new HiloBusquedaDisp();
-        
+
         hilo.start();
-        
-        itemsListaDisp = hilo.getLista();
-        
-        dispositivos = hilo.getDispositivos();
-        
-        listaDisp.setItems(itemsListaDisp);
+
+        new Thread(new Runnable() {
+            @Override
+            public synchronized void run() {
+                itemsListaDisp = hilo.getLista();
+                dispositivos = hilo.getDispositivos();
+                listaDisp.setItems(itemsListaDisp);
+            }
+        }).start();
     }
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         // TODO
-        
+
+        dispositivos = new ArrayList();
+
         listaDisp.setItems(itemsListaDisp);
 
         fondoRPM.setBackground(new Background(new BackgroundFill(Gauge.DARK_COLOR, CornerRadii.EMPTY, Insets.EMPTY)));

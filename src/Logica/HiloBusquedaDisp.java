@@ -53,6 +53,7 @@ public class HiloBusquedaDisp extends Thread {
                 Logger.getLogger(HiloBusquedaDisp.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        System.out.println(dispositivos.isEmpty());
     }
     
     public ObservableList<String> getLista() {
