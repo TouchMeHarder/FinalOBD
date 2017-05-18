@@ -24,8 +24,8 @@ public class ProyectoOBD_Final_v1 extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         List<String> choices = new ArrayList<>();
-        choices.add("Algo");
-        choices.add("Algo");
+        choices.add("Movil");
+        choices.add("Pinganillo");
         choices.add("OBDII");
 
         ChoiceDialog<String> dialog = new ChoiceDialog<>(choices.get(0), choices);

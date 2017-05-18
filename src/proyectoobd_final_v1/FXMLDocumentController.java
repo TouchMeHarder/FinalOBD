@@ -23,6 +23,7 @@ import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -44,14 +45,28 @@ public class FXMLDocumentController implements Initializable {
     private ObservableList<String> itemsListaDisp = FXCollections.observableArrayList();
     private ObservableList<String> itemsListaServ = FXCollections.observableArrayList();
 
-    @FXML Button salir;
-
-    @FXML StackPane panelRPM;
+    @FXML
+    Button salir;
+    @FXML
+    Button serv;
+    @FXML
+    Button conn;
     
-    @FXML AnchorPane fondoRPM;
+    @FXML
+    ProgressBar barra_disp;
+    @FXML
+    ProgressBar barra_serv;
 
-    @FXML ListView listaDisp;
-    @FXML ListView listaServ;
+    @FXML
+    StackPane panelRPM;
+
+    @FXML
+    AnchorPane fondoRPM;
+
+    @FXML
+    ListView listaDisp;
+    @FXML
+    ListView listaServ;
 
     @FXML
     public void salir() {
@@ -60,13 +75,8 @@ public class FXMLDocumentController implements Initializable {
 
     @FXML
     public void listaServ() {
-        if (dispositivos.isEmpty()) {
-            System.out.println("Esta vasio");
-        } else {
-            System.out.println("No esta vasio");
-        }
 
-        /*int i = listaDisp.getSelectionModel().getSelectedIndex();
+        int i = listaDisp.getSelectionModel().getSelectedIndex();
 
         RemoteDevice rd = (RemoteDevice) dispositivos.get(i);
 
@@ -76,9 +86,20 @@ public class FXMLDocumentController implements Initializable {
 
         hilo.start();
 
-        itemsListaServ.add(hilo.getServicio());
+        new Thread(new Runnable() {
+            @Override
+            public synchronized void run() {
+                try {
+                    this.wait(15000);
+                    System.out.println("ya he acabado de esperar");
 
-        listaServ.setItems(itemsListaServ);*/
+                    itemsListaServ.add(hilo.getServicio());
+                    listaServ.setItems(itemsListaServ);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }).start();
     }
 
     @FXML
@@ -91,8 +112,24 @@ public class FXMLDocumentController implements Initializable {
             @Override
             public synchronized void run() {
                 itemsListaDisp = hilo.getLista();
-                dispositivos = hilo.getDispositivos();
+
                 listaDisp.setItems(itemsListaDisp);
+            }
+        }).start();
+
+        new Thread(new Runnable() {
+            @Override
+            public synchronized void run() {
+                try {
+                    barra_disp.setProgress(.5);
+                    
+                    this.wait(15000);
+                    System.out.println("este hilo se acaba de iniciar");
+
+                    dispositivos = hilo.getDispositivos();
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }).start();
     }

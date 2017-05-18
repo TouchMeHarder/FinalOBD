@@ -27,7 +27,7 @@ public class HiloBusquedaServ extends Thread {
     }
 
     @Override
-    public void run() {
+    public synchronized void run() {
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
@@ -41,10 +41,10 @@ public class HiloBusquedaServ extends Thread {
 
         if (servicios.containsKey(nombre)) {
             List l = servicios.get(nombre);
-            servicio = l.get(2).toString();
+            servicio = l.get(1).toString();
         }
         
-        System.out.println(servicio);
+        System.out.println(servicio + " esto es el hilo de servicios");
     }
     
     public String getServicio() {

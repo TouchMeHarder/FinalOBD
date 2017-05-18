@@ -24,7 +24,7 @@ public class HiloBusquedaDisp extends Thread {
     private ArrayList dispositivos;
 
     @Override
-    public void run() {
+    public synchronized void run() {
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
@@ -53,7 +53,8 @@ public class HiloBusquedaDisp extends Thread {
                 Logger.getLogger(HiloBusquedaDisp.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        System.out.println(dispositivos.isEmpty());
+        System.out.println(dispositivos.isEmpty() + " esto es en el hilo de busqueda");
+        System.out.println(dispositivos.get(0).toString() + " esto es el obejto [0]");
     }
     
     public ObservableList<String> getLista() {
