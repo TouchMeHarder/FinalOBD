@@ -41,6 +41,7 @@ import javafx.scene.layout.StackPane;
 import javax.bluetooth.RemoteDevice;
 import javax.microedition.io.Connector;
 import javax.microedition.io.StreamConnection;
+import javax.microedition.io.StreamConnectionNotifier;
 
 /**
  *
@@ -92,12 +93,21 @@ public class FXMLDocumentController implements Initializable {
     public void conectarOBD() {
         try {
             System.out.println(url_disp);
+
+            StreamConnectionNotifier notifier;
+            StreamConnection connection = null;
             
-            StreamConnection streamConnection = (StreamConnection) Connector.open(url_disp);
+            notifier = (StreamConnectionNotifier) Connector.open(url_disp);
+            
+            connection = notifier.acceptAndOpen();
+            
+            InputStream inStream = connection.openInputStream();
+            OutputStream outStream = connection.openOutputStream();
+
+            /*StreamConnection streamConnection = (StreamConnection) Connector.open(url_disp);
 
             OutputStream outStream = streamConnection.openOutputStream();
-            InputStream inStream = streamConnection.openInputStream();
-            
+            InputStream inStream = streamConnection.openInputStream();*/
             new SelectProtocolCommand(ObdProtocols.AUTO).run(inStream, outStream);
 
             new EchoOffCommand().run(inStream, outStream);
