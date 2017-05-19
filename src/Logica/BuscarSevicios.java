@@ -46,22 +46,23 @@ public class BuscarSevicios {
                 @Override
                 public void servicesDiscovered(int i, ServiceRecord[] srs) {
                     for (int j = 0; j < srs.length; j++) {
-                        String url = srs[i].getConnectionURL(ServiceRecord.NOAUTHENTICATE_NOENCRYPT, false);
+                        String url = srs[j].getConnectionURL(ServiceRecord.NOAUTHENTICATE_NOENCRYPT, false);
                         if (url == null) {
                             continue;
                         }
                         String aux;
 
-                        RemoteDevice rd = srs[i].getHostDevice();
-                        DataElement serviceName = srs[i].getAttributeValue(URL);
+                        RemoteDevice rd = srs[j].getHostDevice();
+                        DataElement serviceName = srs[j].getAttributeValue(URL);
 
                         if (serviceName != null) {
                             aux = serviceName.getValue() + "\n" + url;
-                            mapaResultado.get(rd.getBluetoothAddress()).add(aux);
+                            mapaResultado.get(rd.getBluetoothAddress()).add(url);
                         } else {
                             aux = "Sevicio desconocido \n" + url;
-                            mapaResultado.get(rd.getBluetoothAddress()).add(aux);
+                            mapaResultado.get(rd.getBluetoothAddress()).add(url);
                         }
+                    
                     }
                 }
 
@@ -92,9 +93,11 @@ public class BuscarSevicios {
                 synchronized (busquedaSevicioCompetada) {
                     LocalDevice.getLocalDevice().getDiscoveryAgent().searchServices(attrIDs, uscaUuid, rd, serviciosDisponibles);
                     busquedaSevicioCompetada.wait();
+                    System.out.println("despues de buscar servicios");
                 }
             }
         } catch (Exception e) {
+            e.printStackTrace();
         }
         return mapaResultado;
     }

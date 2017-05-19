@@ -21,7 +21,11 @@ import javax.bluetooth.RemoteDevice;
 public class HiloBusquedaDisp extends Thread {
 
     private ObservableList<String> items = FXCollections.observableArrayList();
-    private ArrayList dispositivos;
+    private ArrayList dispositivos, aux;
+
+    public HiloBusquedaDisp(ArrayList disp) {
+        aux = disp;
+    }
 
     @Override
     public synchronized void run() {
@@ -53,8 +57,10 @@ public class HiloBusquedaDisp extends Thread {
                 Logger.getLogger(HiloBusquedaDisp.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        System.out.println(dispositivos.isEmpty() + " esto es en el hilo de busqueda");
-        System.out.println(dispositivos.get(0).toString() + " esto es el obejto [0]");
+        
+        synchronized(aux){
+            aux.notify();
+        }
     }
     
     public ObservableList<String> getLista() {

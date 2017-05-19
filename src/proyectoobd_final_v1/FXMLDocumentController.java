@@ -9,12 +9,21 @@ import Graficos.MedidorRPM;
 import Logica.BuscarDispositivos;
 import Logica.HiloBusquedaDisp;
 import Logica.HiloBusquedaServ;
+import com.github.pires.obd.commands.engine.RPMCommand;
+import com.github.pires.obd.commands.protocol.EchoOffCommand;
+import com.github.pires.obd.commands.protocol.LineFeedOffCommand;
+import com.github.pires.obd.commands.protocol.SelectProtocolCommand;
+import com.github.pires.obd.enums.ObdProtocols;
 import eu.hansolo.medusa.Gauge;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -30,6 +39,8 @@ import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.StackPane;
 import javax.bluetooth.RemoteDevice;
+import javax.microedition.io.Connector;
+import javax.microedition.io.StreamConnection;
 
 /**
  *
@@ -42,6 +53,8 @@ public class FXMLDocumentController implements Initializable {
 
     private String nombreDisp;
 
+    private String url_disp;
+
     private ObservableList<String> itemsListaDisp = FXCollections.observableArrayList();
     private ObservableList<String> itemsListaServ = FXCollections.observableArrayList();
 
@@ -51,7 +64,9 @@ public class FXMLDocumentController implements Initializable {
     Button serv;
     @FXML
     Button conn;
-    
+    @FXML
+    Button conectar_obd;
+
     @FXML
     ProgressBar barra_disp;
     @FXML
@@ -74,7 +89,34 @@ public class FXMLDocumentController implements Initializable {
     }
 
     @FXML
+    public void conectarOBD() {
+        try {
+            System.out.println(url_disp);
+            
+            StreamConnection streamConnection = (StreamConnection) Connector.open(url_disp);
+
+            OutputStream outStream = streamConnection.openOutputStream();
+            InputStream inStream = streamConnection.openInputStream();
+            
+            new SelectProtocolCommand(ObdProtocols.AUTO).run(inStream, outStream);
+
+            new EchoOffCommand().run(inStream, outStream);
+
+            new LineFeedOffCommand().run(inStream, outStream);
+
+            RPMCommand rpm = new RPMCommand();
+            rpm.run(inStream, outStream);
+            System.out.println(rpm.getRPM());
+        } catch (IOException ex) {
+            Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    @FXML
     public void listaServ() {
+        url_disp = new String();
 
         int i = listaDisp.getSelectionModel().getSelectedIndex();
 
@@ -82,19 +124,30 @@ public class FXMLDocumentController implements Initializable {
 
         nombreDisp = rd.getBluetoothAddress();
 
-        HiloBusquedaServ hilo = new HiloBusquedaServ(nombreDisp);
+        HiloBusquedaServ hilo = new HiloBusquedaServ(nombreDisp, url_disp);
 
         hilo.start();
+
+        Platform.runLater(() -> {
+            barra_serv.setProgress(-1);
+        });
 
         new Thread(new Runnable() {
             @Override
             public synchronized void run() {
                 try {
-                    this.wait(15000);
-                    System.out.println("ya he acabado de esperar");
+                    synchronized (url_disp) {
+                        url_disp.wait();
 
-                    itemsListaServ.add(hilo.getServicio());
-                    listaServ.setItems(itemsListaServ);
+                        Platform.runLater(() -> {
+                            barra_serv.setProgress(0.0);
+
+                            itemsListaServ.add(url_disp);
+                            listaServ.setItems(itemsListaServ);
+                        });
+
+                        url_disp = hilo.getServicio();
+                    }
                 } catch (InterruptedException ex) {
                     Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -104,34 +157,40 @@ public class FXMLDocumentController implements Initializable {
 
     @FXML
     public void listaDisp() {
-        HiloBusquedaDisp hilo = new HiloBusquedaDisp();
+        HiloBusquedaDisp hilo = new HiloBusquedaDisp(dispositivos);
 
         hilo.start();
 
-        new Thread(new Runnable() {
-            @Override
-            public synchronized void run() {
-                itemsListaDisp = hilo.getLista();
+        Platform.runLater(() -> {
+            barra_disp.setProgress(-1);
+            serv.setDisable(true);
 
-                listaDisp.setItems(itemsListaDisp);
-            }
-        }).start();
+            itemsListaDisp = hilo.getLista();
+
+            listaDisp.setItems(itemsListaDisp);
+        });
 
         new Thread(new Runnable() {
             @Override
             public synchronized void run() {
                 try {
-                    barra_disp.setProgress(.5);
-                    
-                    this.wait(15000);
-                    System.out.println("este hilo se acaba de iniciar");
+                    synchronized (dispositivos) {
 
-                    dispositivos = hilo.getDispositivos();
+                        dispositivos.wait();
+
+                        Platform.runLater(() -> {
+                            barra_disp.setProgress(0.0);
+                            serv.setDisable(false);
+                        });
+
+                        dispositivos = hilo.getDispositivos();
+
+                    }
                 } catch (InterruptedException ex) {
                     Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-        }).start();
+        }, "").start();
     }
 
     @Override

@@ -21,9 +21,11 @@ public class HiloBusquedaServ extends Thread {
     private Map<String, List<String>> servicios;
     private String nombre;
     private String servicio;
+    private String url;
 
-    public HiloBusquedaServ(String s) {
+    public HiloBusquedaServ(String s, String aux) {
         nombre = s;
+        url = aux;
     }
 
     @Override
@@ -41,12 +43,15 @@ public class HiloBusquedaServ extends Thread {
 
         if (servicios.containsKey(nombre)) {
             List l = servicios.get(nombre);
-            servicio = l.get(1).toString();
+           
+            servicio = l.get(2).toString();
         }
-        
-        System.out.println(servicio + " esto es el hilo de servicios");
+
+        synchronized (url) {
+            url.notify();
+        }
     }
-    
+
     public String getServicio() {
         return servicio;
     }
