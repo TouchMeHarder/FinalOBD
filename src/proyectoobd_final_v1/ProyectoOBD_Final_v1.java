@@ -23,7 +23,7 @@ public class ProyectoOBD_Final_v1 extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        List<String> choices = new ArrayList<>();
+        /*List<String> choices = new ArrayList<>();
         choices.add("Movil");
         choices.add("Pinganillo");
         choices.add("OBDII");
@@ -44,7 +44,15 @@ public class ProyectoOBD_Final_v1 extends Application {
             stage.setScene(scene);
             stage.setResizable(false);
             stage.show();
-        }
+        }*/
+
+        Parent root = FXMLLoader.load(getClass().getResource("FXMLDocument.fxml"));
+
+        Scene scene = new Scene(root);
+
+        stage.setScene(scene);
+        stage.setResizable(false);
+        stage.show();
     }
 
     /**

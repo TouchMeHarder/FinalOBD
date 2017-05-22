@@ -6,12 +6,13 @@
 package proyectoobd_final_v1;
 
 import Graficos.MedidorRPM;
-import Logica.BuscarDispositivos;
 import Logica.HiloBusquedaDisp;
 import Logica.HiloBusquedaServ;
 import com.github.pires.obd.commands.engine.RPMCommand;
 import com.github.pires.obd.commands.protocol.EchoOffCommand;
+import com.github.pires.obd.commands.protocol.HeadersOffCommand;
 import com.github.pires.obd.commands.protocol.LineFeedOffCommand;
+import com.github.pires.obd.commands.protocol.ObdRawCommand;
 import com.github.pires.obd.commands.protocol.SelectProtocolCommand;
 import com.github.pires.obd.enums.ObdProtocols;
 import eu.hansolo.medusa.Gauge;
@@ -26,7 +27,6 @@ import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
@@ -41,7 +41,6 @@ import javafx.scene.layout.StackPane;
 import javax.bluetooth.RemoteDevice;
 import javax.microedition.io.Connector;
 import javax.microedition.io.StreamConnection;
-import javax.microedition.io.StreamConnectionNotifier;
 
 /**
  *
@@ -89,30 +88,28 @@ public class FXMLDocumentController implements Initializable {
         System.exit(0);
     }
 
+    //Método que establece la conexión entre el dispositivo OBD y el programa
     @FXML
     public void conectarOBD() {
         try {
             System.out.println(url_disp);
-
-            StreamConnectionNotifier notifier;
-            StreamConnection connection = null;
             
-            notifier = (StreamConnectionNotifier) Connector.open(url_disp);
-            
-            connection = notifier.acceptAndOpen();
-            
-            InputStream inStream = connection.openInputStream();
-            OutputStream outStream = connection.openOutputStream();
-
-            /*StreamConnection streamConnection = (StreamConnection) Connector.open(url_disp);
+            StreamConnection streamConnection = (StreamConnection) Connector.open(url_disp);
 
             OutputStream outStream = streamConnection.openOutputStream();
-            InputStream inStream = streamConnection.openInputStream();*/
-            new SelectProtocolCommand(ObdProtocols.AUTO).run(inStream, outStream);
-
+            InputStream inStream = streamConnection.openInputStream();
+            new ObdRawCommand("AT D").run(inStream, outStream);
+            new ObdRawCommand("AT Z").run(inStream, outStream);
+            
             new EchoOffCommand().run(inStream, outStream);
-
+            
             new LineFeedOffCommand().run(inStream, outStream);
+            
+            new ObdRawCommand("AT S0").run(inStream, outStream);
+            
+            new HeadersOffCommand().run(inStream, outStream);
+            
+            new SelectProtocolCommand(ObdProtocols.AUTO).run(inStream, outStream);
 
             RPMCommand rpm = new RPMCommand();
             rpm.run(inStream, outStream);
@@ -123,7 +120,11 @@ public class FXMLDocumentController implements Initializable {
             Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    
+    //** Es posible que sea irrelevante mostrar o incluso implementar este método, ya que la conexión siempre se **
+    //** establecerá con un dispositivo OBD, que siempre tendrá los mismos servicios disponibles **
+    
+    //Método que lista los servicios que soporta el dispositivo conectado(OBD)
     @FXML
     public void listaServ() {
         url_disp = new String();
@@ -165,6 +166,7 @@ public class FXMLDocumentController implements Initializable {
         }).start();
     }
 
+    //Método que lista los dispositivos bluetooth en rango
     @FXML
     public void listaDisp() {
         HiloBusquedaDisp hilo = new HiloBusquedaDisp(dispositivos);
@@ -211,6 +213,7 @@ public class FXMLDocumentController implements Initializable {
 
         listaDisp.setItems(itemsListaDisp);
 
+        //Se prepara el panel que contiene los relojes y gráficas
         fondoRPM.setBackground(new Background(new BackgroundFill(Gauge.DARK_COLOR, CornerRadii.EMPTY, Insets.EMPTY)));
 
         gauge = new MedidorRPM();

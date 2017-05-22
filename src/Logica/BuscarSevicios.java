@@ -23,7 +23,7 @@ import javax.bluetooth.UUID;
  */
 public class BuscarSevicios {
 
-    private final UUID OBEX_OPP = new UUID(0x1105);
+    private final UUID OBEX_OPP = new UUID(0x1101);
 
     private final int URL = 0x0100;
 
@@ -31,7 +31,7 @@ public class BuscarSevicios {
 
         UUID[] uscaUuid = new UUID[]{OBEX_OPP};
         final Object busquedaSevicioCompetada = new Object();
-        int[] attrIDs = new int[]{URL};
+        //int[] attrIDs = new int[]{URL};
 
         BuscarDispositivos buscarDisp = new BuscarDispositivos();
 
@@ -91,7 +91,7 @@ public class BuscarSevicios {
                 mapaResultado.put(rd.getBluetoothAddress(), listaDetallesDisp);
                 
                 synchronized (busquedaSevicioCompetada) {
-                    LocalDevice.getLocalDevice().getDiscoveryAgent().searchServices(attrIDs, uscaUuid, rd, serviciosDisponibles);
+                    LocalDevice.getLocalDevice().getDiscoveryAgent().searchServices(null, uscaUuid, rd, serviciosDisponibles);
                     busquedaSevicioCompetada.wait();
                     System.out.println("despues de buscar servicios");
                 }

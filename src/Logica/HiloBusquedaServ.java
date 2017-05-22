@@ -43,8 +43,10 @@ public class HiloBusquedaServ extends Thread {
 
         if (servicios.containsKey(nombre)) {
             List l = servicios.get(nombre);
-           
+
             servicio = l.get(2).toString();
+        } else {
+            System.out.println("El dispositivo soporta el servicio requerido");
         }
 
         synchronized (url) {
