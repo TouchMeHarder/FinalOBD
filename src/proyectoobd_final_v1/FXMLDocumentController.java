@@ -6,8 +6,10 @@
 package proyectoobd_final_v1;
 
 import Graficos.MedidorRPM;
+import Logica.DatosSim;
 import Logica.HiloBusquedaDisp;
 import Logica.HiloBusquedaServ;
+import com.github.pires.obd.commands.control.TroubleCodesCommand;
 import com.github.pires.obd.commands.engine.RPMCommand;
 import com.github.pires.obd.commands.protocol.EchoOffCommand;
 import com.github.pires.obd.commands.protocol.HeadersOffCommand;
@@ -51,6 +53,8 @@ public class FXMLDocumentController implements Initializable {
     private MedidorRPM gauge;
     private ArrayList dispositivos;
 
+    private ArrayList mockRPM;
+
     private String nombreDisp;
 
     private String url_disp;
@@ -66,6 +70,8 @@ public class FXMLDocumentController implements Initializable {
     Button conn;
     @FXML
     Button conectar_obd;
+    @FXML
+    Button mockup;
 
     @FXML
     ProgressBar barra_disp;
@@ -88,42 +94,70 @@ public class FXMLDocumentController implements Initializable {
         System.exit(0);
     }
 
+    //Pathetic bullshit; redo everything
+    @FXML
+    public void mostrarMockupRPM() {
+        DatosSim datos = new DatosSim();
+
+        datos.getInfoValores();
+
+        mockRPM = datos.getValoresRPM();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < mockRPM.size(); i++) {
+                    System.out.println("hello");
+                    gauge.getRpmGauge().setValue(Integer.parseInt((String) mockRPM.get(i)));
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        }).start();
+    }
+
     //Método que establece la conexión entre el dispositivo OBD y el programa
     @FXML
     public void conectarOBD() {
         try {
             System.out.println(url_disp);
-            
+
             StreamConnection streamConnection = (StreamConnection) Connector.open(url_disp);
 
             OutputStream outStream = streamConnection.openOutputStream();
             InputStream inStream = streamConnection.openInputStream();
-            new ObdRawCommand("AT D").run(inStream, outStream);
-            new ObdRawCommand("AT Z").run(inStream, outStream);
-            
+            //new ObdRawCommand("AT D").run(inStream, outStream);
+            //new ObdRawCommand("AT Z").run(inStream, outStream);
+
             new EchoOffCommand().run(inStream, outStream);
-            
+
             new LineFeedOffCommand().run(inStream, outStream);
-            
-            new ObdRawCommand("AT S0").run(inStream, outStream);
-            
+
+            //new ObdRawCommand("AT S0").run(inStream, outStream);
+
             new HeadersOffCommand().run(inStream, outStream);
-            
+
             new SelectProtocolCommand(ObdProtocols.AUTO).run(inStream, outStream);
 
-            RPMCommand rpm = new RPMCommand();
+            /*RPMCommand rpm = new RPMCommand();
             rpm.run(inStream, outStream);
-            System.out.println(rpm.getRPM());
+            System.out.println(rpm.getRPM());*/
+            
+            TroubleCodesCommand trouble = new TroubleCodesCommand();
+            trouble.run(inStream, outStream);
+            System.out.println(trouble.getFormattedResult());
         } catch (IOException ex) {
             Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InterruptedException ex) {
             Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     //** Es posible que sea irrelevante mostrar o incluso implementar este método, ya que la conexión siempre se **
     //** establecerá con un dispositivo OBD, que siempre tendrá los mismos servicios disponibles **
-    
     //Método que lista los servicios que soporta el dispositivo conectado(OBD)
     @FXML
     public void listaServ() {

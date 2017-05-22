@@ -59,6 +59,7 @@
                           </yAxis>
                         </LineChart>
                         <Button fx:id="conectar_obd" layoutX="659.0" layoutY="379.0" mnemonicParsing="false" onAction="#conectarOBD" text="Conectar" AnchorPane.bottomAnchor="14.0" AnchorPane.rightAnchor="14.0" />
+                        <Button fx:id="mockup" layoutX="14.0" layoutY="379.0" mnemonicParsing="false" onAction="#mostrarMockupRPM" text="Mockup Test" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="14.0" />
                      </children>
                   </AnchorPane>
               </content>
