@@ -19,7 +19,6 @@ import java.util.logging.Logger;
  *
  * @author practicas
  */
-
 //Even more pathetic bullcrap
 public class DatosSim {
 
@@ -32,21 +31,18 @@ public class DatosSim {
 
     private ArrayList leerFichero() {
         ArrayList datosFichero = null;
-        
+
         BufferedReader in = null;
         try {
             in = new BufferedReader(new FileReader(fichero_rpm));
             String str;
             String[] aux;
             str = in.readLine();
-            System.out.println("hola");
             datosFichero = new ArrayList();
-            while (str != null) {
-                aux = str.split(",");
-                
-                for (int i = 0; i < aux.length; i++) {
-                    datosFichero.add(aux[i]);
-                }
+            aux = str.split(",");
+
+            for (int i = 0; i < aux.length; i++) {
+                datosFichero.add(aux[i]);
             }
         } catch (FileNotFoundException ex) {
             Logger.getLogger(DatosSim.class.getName()).log(Level.SEVERE, null, ex);
@@ -64,9 +60,5 @@ public class DatosSim {
 
     public ArrayList getValoresRPM() {
         return valoresRPM;
-    }
-    
-    public void getInfoValores() {
-        System.out.println(valoresRPM.isEmpty());
     }
 }

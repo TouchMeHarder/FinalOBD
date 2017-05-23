@@ -32,6 +32,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
+import javafx.scene.chart.LineChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
@@ -72,6 +73,8 @@ public class FXMLDocumentController implements Initializable {
     Button conectar_obd;
     @FXML
     Button mockup;
+    @FXML
+    Button cargaMock;
 
     @FXML
     ProgressBar barra_disp;
@@ -88,35 +91,45 @@ public class FXMLDocumentController implements Initializable {
     ListView listaDisp;
     @FXML
     ListView listaServ;
+    
+    @FXML
+    LineChart grafica;
 
     @FXML
     public void salir() {
         System.exit(0);
     }
 
+    @FXML
+    public void cargarMock() {
+        DatosSim datos = new DatosSim();
+
+        mockRPM = datos.getValoresRPM();
+    }
+
     //Pathetic bullshit; redo everything
     @FXML
     public void mostrarMockupRPM() {
-        DatosSim datos = new DatosSim();
-
-        datos.getInfoValores();
-
-        mockRPM = datos.getValoresRPM();
-
+        ObservableList<String> lista = FXCollections.observableArrayList();
+        
         new Thread(new Runnable() {
             @Override
             public void run() {
                 for (int i = 0; i < mockRPM.size(); i++) {
-                    System.out.println("hello");
-                    gauge.getRpmGauge().setValue(Integer.parseInt((String) mockRPM.get(i)));
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(200);
+                        System.out.println(mockRPM.get(i));
+                        gauge.getRpmGauge().setValue(Integer.parseInt((String) mockRPM.get(i)));
+                        
+                        lista.add((String)mockRPM.get(i));
                     } catch (InterruptedException ex) {
                         Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
             }
         }).start();
+        
+        grafica.setData(lista);
     }
 
     //Método que establece la conexión entre el dispositivo OBD y el programa
@@ -137,7 +150,6 @@ public class FXMLDocumentController implements Initializable {
             new LineFeedOffCommand().run(inStream, outStream);
 
             //new ObdRawCommand("AT S0").run(inStream, outStream);
-
             new HeadersOffCommand().run(inStream, outStream);
 
             new SelectProtocolCommand(ObdProtocols.AUTO).run(inStream, outStream);
@@ -145,7 +157,6 @@ public class FXMLDocumentController implements Initializable {
             /*RPMCommand rpm = new RPMCommand();
             rpm.run(inStream, outStream);
             System.out.println(rpm.getRPM());*/
-            
             TroubleCodesCommand trouble = new TroubleCodesCommand();
             trouble.run(inStream, outStream);
             System.out.println(trouble.getFormattedResult());
