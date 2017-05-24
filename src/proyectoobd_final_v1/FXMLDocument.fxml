@@ -50,7 +50,7 @@
                 <AnchorPane fx:id="fondoRPM" minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
                         <StackPane fx:id="panelRPM" layoutX="14.0" layoutY="14.0" prefHeight="272.0" prefWidth="272.0" AnchorPane.bottomAnchor="132.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="439.0" AnchorPane.topAnchor="14.0" />
-                        <LineChart layoutX="322.0" layoutY="14.0" prefHeight="272.0" prefWidth="389.0" AnchorPane.bottomAnchor="132.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="14.0">
+                        <LineChart fx:id="grafica" layoutX="322.0" layoutY="14.0" prefHeight="272.0" prefWidth="389.0" AnchorPane.bottomAnchor="132.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="14.0">
                           <xAxis>
                             <CategoryAxis side="BOTTOM" />
                           </xAxis>
@@ -65,7 +65,7 @@
                   </AnchorPane>
               </content>
             </Tab>
-            <Tab text="Diagnostico">
+            <Tab text="Codigos error">
               <content>
                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
               </content>

@@ -31,7 +31,6 @@ public class BuscarSevicios {
 
         UUID[] uscaUuid = new UUID[]{OBEX_OPP};
         final Object busquedaSevicioCompetada = new Object();
-        //int[] attrIDs = new int[]{URL};
 
         BuscarDispositivos buscarDisp = new BuscarDispositivos();
 
@@ -57,12 +56,11 @@ public class BuscarSevicios {
 
                         if (serviceName != null) {
                             aux = serviceName.getValue() + "\n" + url;
-                            mapaResultado.get(rd.getBluetoothAddress()).add(url);
+                            mapaResultado.get(rd.getBluetoothAddress()).add(aux);
                         } else {
                             aux = "Sevicio desconocido \n" + url;
-                            mapaResultado.get(rd.getBluetoothAddress()).add(url);
+                            mapaResultado.get(rd.getBluetoothAddress()).add(aux);
                         }
-                    
                     }
                 }
 
@@ -77,23 +75,22 @@ public class BuscarSevicios {
                 public void inquiryCompleted(int i) {
                 }
             };
-            
+
             ArrayList dispositivos = buscarDisp.obtenerDispositivos();
-            
+
             for (int i = 0; i < dispositivos.size(); i++) {
                 RemoteDevice rd = (RemoteDevice) dispositivos.get(i);
-                
+
                 List<String> listaDetallesDisp = new ArrayList<String>();
-                
+
                 listaDetallesDisp.add(rd.getFriendlyName(false));
                 listaDetallesDisp.add(rd.getBluetoothAddress());
-                
+
                 mapaResultado.put(rd.getBluetoothAddress(), listaDetallesDisp);
-                
+
                 synchronized (busquedaSevicioCompetada) {
                     LocalDevice.getLocalDevice().getDiscoveryAgent().searchServices(null, uscaUuid, rd, serviciosDisponibles);
                     busquedaSevicioCompetada.wait();
-                    System.out.println("despues de buscar servicios");
                 }
             }
         } catch (Exception e) {

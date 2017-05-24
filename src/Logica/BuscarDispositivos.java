@@ -23,8 +23,6 @@ import javax.bluetooth.ServiceRecord;
 public class BuscarDispositivos {
 
     public ArrayList obtenerDispositivos() {
-        
-        
 
         ArrayList listaDisp = new ArrayList();
         final Object peticionFinalizada = new Object();

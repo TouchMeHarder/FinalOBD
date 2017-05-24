@@ -10,11 +10,9 @@ import Logica.DatosSim;
 import Logica.HiloBusquedaDisp;
 import Logica.HiloBusquedaServ;
 import com.github.pires.obd.commands.control.TroubleCodesCommand;
-import com.github.pires.obd.commands.engine.RPMCommand;
 import com.github.pires.obd.commands.protocol.EchoOffCommand;
 import com.github.pires.obd.commands.protocol.HeadersOffCommand;
 import com.github.pires.obd.commands.protocol.LineFeedOffCommand;
-import com.github.pires.obd.commands.protocol.ObdRawCommand;
 import com.github.pires.obd.commands.protocol.SelectProtocolCommand;
 import com.github.pires.obd.enums.ObdProtocols;
 import eu.hansolo.medusa.Gauge;
@@ -33,6 +31,9 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.XYChart;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
@@ -91,7 +92,7 @@ public class FXMLDocumentController implements Initializable {
     ListView listaDisp;
     @FXML
     ListView listaServ;
-    
+
     @FXML
     LineChart grafica;
 
@@ -102,16 +103,32 @@ public class FXMLDocumentController implements Initializable {
 
     @FXML
     public void cargarMock() {
-        DatosSim datos = new DatosSim();
+        try {
+            DatosSim datos = new DatosSim();
 
-        mockRPM = datos.getValoresRPM();
+            mockRPM = datos.getValoresRPM();
+
+            Alert alert = new Alert(AlertType.INFORMATION);
+            alert.setTitle("Confirmación");
+            alert.setHeaderText("Información");
+            alert.setContentText("Los datos se han cargado correctamente");
+
+            alert.showAndWait();
+        } catch (Exception e) {
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("Ha ocurrido un error");
+            alert.setContentText("La carga de datos no se ha realizado");
+
+            alert.showAndWait();
+        }
     }
 
-    //Pathetic bullshit; redo everything
+    //Check thoroughly
     @FXML
     public void mostrarMockupRPM() {
-        ObservableList<String> lista = FXCollections.observableArrayList();
-        
+        XYChart.Series series = new XYChart.Series();
+
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -120,24 +137,42 @@ public class FXMLDocumentController implements Initializable {
                         Thread.sleep(200);
                         System.out.println(mockRPM.get(i));
                         gauge.getRpmGauge().setValue(Integer.parseInt((String) mockRPM.get(i)));
-                        
-                        lista.add((String)mockRPM.get(i));
                     } catch (InterruptedException ex) {
                         Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
+
+                synchronized (grafica) {
+                    grafica.notify();
+                }
             }
         }).start();
-        
-        grafica.setData(lista);
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                synchronized (grafica) {
+                    try {
+                        grafica.wait();
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                for (int i = 0; i < mockRPM.size(); i++) {
+                    int aux = Integer.parseInt(mockRPM.get(i).toString());
+
+                    series.getData().add(new XYChart.Data(String.valueOf(i), aux));
+                }
+            }
+        }).start();
+
+        grafica.getData().add(series);
     }
 
     //Método que establece la conexión entre el dispositivo OBD y el programa
     @FXML
     public void conectarOBD() {
         try {
-            System.out.println(url_disp);
-
             StreamConnection streamConnection = (StreamConnection) Connector.open(url_disp);
 
             OutputStream outStream = streamConnection.openOutputStream();
@@ -247,13 +282,11 @@ public class FXMLDocumentController implements Initializable {
                     Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-        }, "").start();
+        }, "You can name the thread here!").start();
     }
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // TODO
-
         dispositivos = new ArrayList();
 
         listaDisp.setItems(itemsListaDisp);

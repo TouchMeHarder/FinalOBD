@@ -19,7 +19,7 @@ import java.util.logging.Logger;
  *
  * @author practicas
  */
-//Even more pathetic bullcrap
+//Check thoroughly
 public class DatosSim {
 
     private File fichero_rpm = new File("src/Recursos/revoluciones.txt");
