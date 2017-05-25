@@ -8,7 +8,7 @@
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="ProyectoOBD_Final_v1.jar" size="78480" download="eager" />
+    <jar href="ProyectoOBD_Final_v1.jar" size="78850" download="eager" />
     <jar href="lib\Medusa-7.9.jar" size="1464796" download="eager" />
     <jar href="lib\bluecove-2.1.1-SNAPSHOT.jar" size="663800" download="eager" />
     <jar href="lib\obd-java-api-1.0-RC15.jar" size="72429" download="eager" />

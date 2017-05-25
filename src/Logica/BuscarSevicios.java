@@ -56,10 +56,10 @@ public class BuscarSevicios {
 
                         if (serviceName != null) {
                             aux = serviceName.getValue() + "\n" + url;
-                            mapaResultado.get(rd.getBluetoothAddress()).add(aux);
+                            mapaResultado.get(rd.getBluetoothAddress()).add(url);
                         } else {
                             aux = "Sevicio desconocido \n" + url;
-                            mapaResultado.get(rd.getBluetoothAddress()).add(aux);
+                            mapaResultado.get(rd.getBluetoothAddress()).add(url);
                         }
                     }
                 }

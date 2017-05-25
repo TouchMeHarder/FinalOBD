@@ -9,7 +9,10 @@ import Graficos.MedidorRPM;
 import Logica.DatosSim;
 import Logica.HiloBusquedaDisp;
 import Logica.HiloBusquedaServ;
+import com.github.pires.obd.commands.control.PendingTroubleCodesCommand;
+import com.github.pires.obd.commands.control.PermanentTroubleCodesCommand;
 import com.github.pires.obd.commands.control.TroubleCodesCommand;
+import com.github.pires.obd.commands.engine.RPMCommand;
 import com.github.pires.obd.commands.protocol.EchoOffCommand;
 import com.github.pires.obd.commands.protocol.HeadersOffCommand;
 import com.github.pires.obd.commands.protocol.LineFeedOffCommand;
@@ -177,24 +180,39 @@ public class FXMLDocumentController implements Initializable {
 
             OutputStream outStream = streamConnection.openOutputStream();
             InputStream inStream = streamConnection.openInputStream();
-            //new ObdRawCommand("AT D").run(inStream, outStream);
-            //new ObdRawCommand("AT Z").run(inStream, outStream);
 
             new EchoOffCommand().run(inStream, outStream);
 
             new LineFeedOffCommand().run(inStream, outStream);
 
-            //new ObdRawCommand("AT S0").run(inStream, outStream);
             new HeadersOffCommand().run(inStream, outStream);
 
             new SelectProtocolCommand(ObdProtocols.AUTO).run(inStream, outStream);
 
-            /*RPMCommand rpm = new RPMCommand();
+            RPMCommand rpm = new RPMCommand();
             rpm.run(inStream, outStream);
-            System.out.println(rpm.getRPM());*/
+            gauge.getRpmGauge().setValue(rpm.getRPM());
+
+            Platform.runLater(new Runnable() {
+                @Override
+                public void run() {
+                    while (true) {
+                        gauge.getRpmGauge().setValue(rpm.getRPM());
+                    }
+                }
+            });
+
+            PermanentTroubleCodesCommand perma = new PermanentTroubleCodesCommand();
+            perma.run(inStream, outStream);
+            System.out.println("Estos son los codigos permanentes: " + perma.getFormattedResult());
+
+            PendingTroubleCodesCommand pending = new PendingTroubleCodesCommand();
+            pending.run(inStream, outStream);
+            System.out.println("Estos son los codigos pendientes: " + pending.getFormattedResult());
+
             TroubleCodesCommand trouble = new TroubleCodesCommand();
             trouble.run(inStream, outStream);
-            System.out.println(trouble.getFormattedResult());
+            System.out.println("Estos son codigos genericos: " + trouble.getFormattedResult());
         } catch (IOException ex) {
             Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InterruptedException ex) {
