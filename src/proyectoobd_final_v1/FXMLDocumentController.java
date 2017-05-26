@@ -9,9 +9,9 @@ import Graficos.MedidorRPM;
 import Logica.DatosSim;
 import Logica.HiloBusquedaDisp;
 import Logica.HiloBusquedaServ;
+import com.github.pires.obd.commands.control.DistanceMILOnCommand;
 import com.github.pires.obd.commands.control.PendingTroubleCodesCommand;
 import com.github.pires.obd.commands.control.PermanentTroubleCodesCommand;
-import com.github.pires.obd.commands.control.TroubleCodesCommand;
 import com.github.pires.obd.commands.engine.RPMCommand;
 import com.github.pires.obd.commands.protocol.EchoOffCommand;
 import com.github.pires.obd.commands.protocol.HeadersOffCommand;
@@ -40,6 +40,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -55,6 +56,12 @@ import javax.microedition.io.StreamConnection;
  */
 public class FXMLDocumentController implements Initializable {
 
+    private StreamConnection streamConnection;
+    
+    private PermanentTroubleCodesCommand perma;
+    private PendingTroubleCodesCommand pending;
+    private DistanceMILOnCommand mil;
+
     private MedidorRPM gauge;
     private ArrayList dispositivos;
 
@@ -66,6 +73,8 @@ public class FXMLDocumentController implements Initializable {
 
     private ObservableList<String> itemsListaDisp = FXCollections.observableArrayList();
     private ObservableList<String> itemsListaServ = FXCollections.observableArrayList();
+    private ObservableList<String> itemsListaPerm = FXCollections.observableArrayList();
+    private ObservableList<String> itemsListaPend = FXCollections.observableArrayList();
 
     @FXML
     Button salir;
@@ -95,6 +104,13 @@ public class FXMLDocumentController implements Initializable {
     ListView listaDisp;
     @FXML
     ListView listaServ;
+    @FXML
+    ListView listaPerm;
+    @FXML
+    ListView listaPend;
+
+    @FXML
+    TextField distancia;
 
     @FXML
     LineChart grafica;
@@ -137,7 +153,7 @@ public class FXMLDocumentController implements Initializable {
             public void run() {
                 for (int i = 0; i < mockRPM.size(); i++) {
                     try {
-                        Thread.sleep(200);
+                        Thread.sleep(100);
                         System.out.println(mockRPM.get(i));
                         gauge.getRpmGauge().setValue(Integer.parseInt((String) mockRPM.get(i)));
                     } catch (InterruptedException ex) {
@@ -172,11 +188,32 @@ public class FXMLDocumentController implements Initializable {
         grafica.getData().add(series);
     }
 
+    //Método que muestra los diferentes codigos pedidos al OBD
+    @FXML
+    public void obtenerCodigos() {
+        try {
+            distancia.setText(mil.getFormattedResult());
+            
+            itemsListaPerm.add(perma.getFormattedResult());
+            itemsListaPend.add(pending.getFormattedResult());
+            
+            listaPerm.setItems(itemsListaPerm);
+            listaPend.setItems(itemsListaPend);
+        } catch (Exception e) {
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("Ha ocurrido un error");
+            alert.setContentText("La carga de datos no se ha realizado");
+
+            alert.showAndWait();
+        }
+    }
+
     //Método que establece la conexión entre el dispositivo OBD y el programa
     @FXML
     public void conectarOBD() {
         try {
-            StreamConnection streamConnection = (StreamConnection) Connector.open(url_disp);
+            streamConnection = (StreamConnection) Connector.open(url_disp);
 
             OutputStream outStream = streamConnection.openOutputStream();
             InputStream inStream = streamConnection.openInputStream();
@@ -191,6 +228,8 @@ public class FXMLDocumentController implements Initializable {
 
             RPMCommand rpm = new RPMCommand();
             rpm.run(inStream, outStream);
+            /*La función getRPM() es propia de la clase RPMCommand. El formato del valor que devuelve es de
+            tipo int (entero).*/
             gauge.getRpmGauge().setValue(rpm.getRPM());
 
             Platform.runLater(new Runnable() {
@@ -202,17 +241,18 @@ public class FXMLDocumentController implements Initializable {
                 }
             });
 
-            PermanentTroubleCodesCommand perma = new PermanentTroubleCodesCommand();
+            perma = new PermanentTroubleCodesCommand();
             perma.run(inStream, outStream);
             System.out.println("Estos son los codigos permanentes: " + perma.getFormattedResult());
 
-            PendingTroubleCodesCommand pending = new PendingTroubleCodesCommand();
+            pending = new PendingTroubleCodesCommand();
             pending.run(inStream, outStream);
             System.out.println("Estos son los codigos pendientes: " + pending.getFormattedResult());
-
-            TroubleCodesCommand trouble = new TroubleCodesCommand();
-            trouble.run(inStream, outStream);
-            System.out.println("Estos son codigos genericos: " + trouble.getFormattedResult());
+            
+            mil = new DistanceMILOnCommand();
+            mil.run(inStream, outStream);
+            System.out.println("Esta es la distancia recorrida con la luz MIL encendida: " + mil.getKm() + "Km");
+            
         } catch (IOException ex) {
             Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InterruptedException ex) {
