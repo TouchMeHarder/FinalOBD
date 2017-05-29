@@ -10,6 +10,8 @@ import java.util.Map;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 
 /**
  *
@@ -47,7 +49,12 @@ public class HiloBusquedaServ extends Thread {
 
                 servicio = l.get(2).toString();
             } catch (Exception e) {
-                System.err.print("Error al buscar servicio, vuelva a intentarlo.");
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText("Ha ocurrido un error!");
+                alert.setContentText("El dispositivo seleccionado no tiene el servicio requerido disponible");
+
+                alert.showAndWait();
             }
         }
 
