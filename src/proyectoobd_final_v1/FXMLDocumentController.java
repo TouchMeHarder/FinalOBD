@@ -17,6 +17,9 @@ import com.github.pires.obd.commands.protocol.EchoOffCommand;
 import com.github.pires.obd.commands.protocol.HeadersOffCommand;
 import com.github.pires.obd.commands.protocol.LineFeedOffCommand;
 import com.github.pires.obd.commands.protocol.SelectProtocolCommand;
+import com.github.pires.obd.commands.temperature.AirIntakeTemperatureCommand;
+import com.github.pires.obd.commands.temperature.AmbientAirTemperatureCommand;
+import com.github.pires.obd.commands.temperature.EngineCoolantTemperatureCommand;
 import com.github.pires.obd.enums.ObdProtocols;
 import eu.hansolo.medusa.Gauge;
 import java.io.IOException;
@@ -58,31 +61,35 @@ import javax.microedition.io.StreamConnection;
  * @author practicas
  */
 public class FXMLDocumentController implements Initializable {
-    
+
     public final XYChart.Series series = new XYChart.Series();
-    
+
     private StreamConnection streamConnection;
     private OutputStream outStream;
     private InputStream inStream;
-    
+
     private PermanentTroubleCodesCommand perma;
     private PendingTroubleCodesCommand pending;
     private DistanceMILOnCommand mil;
-    
+
+    private AirIntakeTemperatureCommand intake;
+    private AmbientAirTemperatureCommand ambient;
+    private EngineCoolantTemperatureCommand coolant;
+
     private MedidorRPM gauge;
     private ArrayList dispositivos;
-    
+
     private ArrayList mockRPM;
-    
+
     private String nombreDisp;
-    
+
     private String url_disp;
-    
+
     private ObservableList<String> itemsListaDisp = FXCollections.observableArrayList();
     private ObservableList<String> itemsListaServ = FXCollections.observableArrayList();
     private ObservableList<String> itemsListaPerm = FXCollections.observableArrayList();
     private ObservableList<String> itemsListaPend = FXCollections.observableArrayList();
-    
+
     @FXML
     Button salir;
     @FXML
@@ -95,18 +102,18 @@ public class FXMLDocumentController implements Initializable {
     Button mockup;
     @FXML
     Button cargaMock;
-    
+
     @FXML
     ProgressBar barra_disp;
     @FXML
     ProgressBar barra_serv;
-    
+
     @FXML
     StackPane panelRPM;
-    
+
     @FXML
     AnchorPane fondoRPM;
-    
+
     @FXML
     ListView listaDisp;
     @FXML
@@ -115,48 +122,59 @@ public class FXMLDocumentController implements Initializable {
     ListView listaPerm;
     @FXML
     ListView listaPend;
-    
+
     @FXML
     TextField distancia;
-    
+    @FXML
+    TextField refrig;
+    @FXML
+    TextField interior;
+    @FXML
+    TextField exterior;
+
     @FXML
     LineChart grafica;
-    
+
     @FXML
     public void salir() {
         System.exit(0);
     }
-    
+
+    //Método que obtiene los valores del fichero, que se guardan en una lista para ser representados más tarde
     @FXML
     public void cargarMock() {
         try {
             DatosSim datos = new DatosSim();
-            
+
             mockRPM = datos.getValoresRPM();
-            
+
             Alert alert = new Alert(AlertType.INFORMATION);
             alert.setTitle("Confirmación");
             alert.setHeaderText("Información");
             alert.setContentText("Los datos se han cargado correctamente");
-            
+
             alert.show();
         } catch (Exception e) {
             Alert alert = new Alert(AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText("Ha ocurrido un error");
             alert.setContentText("La carga de datos no se ha realizado");
-            
+
             alert.showAndWait();
         }
     }
 
-    //Check thoroughly
+    //Método que realiza los cambios en las gráficas (reloj revoluciones y gráfica de líneas)
     @FXML
     public void mostrarMockupRPM() {
+        /*Se vacían tanto la serie de valores como la gráfica, para que se pueda realizar el test varias veces en
+        la misma ejecución y los resultados no se intercalen*/
         series.getData().clear();
         grafica.getData().clear();
-        
+
         try {
+            /*Se lanza un hilo que modifica los valores del reloj de revoluciones basándose en los valores
+            de la lista obtenida en la funcion cargarMock()*/
             new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -167,10 +185,15 @@ public class FXMLDocumentController implements Initializable {
                                 System.out.println(mockRPM.get(i));
                                 gauge.getRpmGauge().setValue(Integer.parseInt((String) mockRPM.get(i)));
                             } catch (InterruptedException ex) {
-                                Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+                                Alert alert = new Alert(AlertType.ERROR);
+                                alert.setTitle("Error");
+                                alert.setHeaderText("Ha ocurrido un error!");
+                                alert.setContentText("La ejecución ha sido interrumpida inesperadamente");
+
+                                alert.showAndWait();
                             }
                         }
-                        
+
                         synchronized (grafica) {
                             grafica.notify();
                         }
@@ -182,16 +205,17 @@ public class FXMLDocumentController implements Initializable {
                                 alert.setTitle("Error");
                                 alert.setHeaderText("Ha ocurrido un error!");
                                 alert.setContentText("La lista de datos esta vacia");
-                                
+
                                 alert.showAndWait();
                             }
                         });
                     }
                 }
             }).start();
-            
+
+            /*Segundo hilo que se encarga de establecer los valores de la serie y añadirla a la gráfica*/
             new Thread(new Runnable() {
-                
+
                 @Override
                 public void run() {
                     synchronized (grafica) {
@@ -202,7 +226,7 @@ public class FXMLDocumentController implements Initializable {
                             alert.setTitle("Error");
                             alert.setHeaderText("Ha ocurrido un error!");
                             alert.setContentText("La ejecución ha sido interrumpida inesperadamente");
-                            
+
                             alert.showAndWait();
                         }
                     }
@@ -223,7 +247,53 @@ public class FXMLDocumentController implements Initializable {
             alert.setTitle("Error");
             alert.setHeaderText("Ha ocurrido un error!");
             alert.setContentText("No hay datos para poder realizar el test");
-            
+
+            alert.showAndWait();
+        }
+    }
+
+    //Método que representa las temperaturas obtenidas del OBD
+    @FXML
+    public void obtenerTemp() {
+        try {
+            if (coolant.getFormattedResult() == null || coolant.getFormattedResult().equals("NODATA") || coolant.getFormattedResult().equals("")) {
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText("Ha ocurrido un error!");
+                alert.setContentText("Temperatura del liquido refrigerante no disponible");
+
+                alert.showAndWait();
+            } else {
+                refrig.setText(String.valueOf(coolant.getTemperature()));
+            }
+
+            if (ambient.getFormattedResult() == null || ambient.getFormattedResult().equals("NODATA") || ambient.getFormattedResult().equals("")) {
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText("Ha ocurrido un error!");
+                alert.setContentText("Temperatura de entrada(motor) no disponible");
+
+                alert.showAndWait();
+            } else {
+                exterior.setText(String.valueOf(ambient.getTemperature()));
+            }
+
+            if (intake.getFormattedResult() == null || intake.getFormattedResult().equals("NODATA") || intake.getFormattedResult().equals("")) {
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText("Ha ocurrido un error!");
+                alert.setContentText("Temperatura interior(motor) no disponible");
+
+                alert.showAndWait();
+            } else {
+                interior.setText(String.valueOf(intake.getTemperature()));
+            }
+        } catch (Exception e) {
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("Ha ocurrido un error!");
+            alert.setContentText("La obtencion de datos ha fallado");
+
             alert.showAndWait();
         }
     }
@@ -233,29 +303,29 @@ public class FXMLDocumentController implements Initializable {
     public void obtenerCodigos() {
         try {
             distancia.setText(mil.getFormattedResult());
-            
-            if (perma.getFormattedResult() == null || perma.getFormattedResult().equals("NO DATA") || perma.getFormattedResult().equals("")) {
+
+            if (perma.getFormattedResult() == null || perma.getFormattedResult().equals("NODATA") || perma.getFormattedResult().equals("")) {
                 Alert alert = new Alert(AlertType.INFORMATION);
                 alert.setTitle("Información");
                 alert.setHeaderText("Resultado");
                 alert.setContentText("No hay codigos de error permanentes registrados");
-                
+
                 alert.showAndWait();
             } else {
                 itemsListaPerm.add(perma.getFormattedResult());
             }
-            
-            if (pending.getFormattedResult() == null || pending.getFormattedResult().equals("NO DATA") || pending.getFormattedResult().equals("")) {
+
+            if (pending.getFormattedResult() == null || pending.getFormattedResult().equals("NODATA") || pending.getFormattedResult().equals("")) {
                 Alert alert = new Alert(AlertType.INFORMATION);
                 alert.setTitle("Información");
                 alert.setHeaderText("Resultado");
                 alert.setContentText("No hay codigos de error pendientes registrados");
-                
+
                 alert.showAndWait();
             } else {
                 itemsListaPend.add(pending.getFormattedResult());
             }
-            
+
             listaPerm.setItems(itemsListaPerm);
             listaPend.setItems(itemsListaPend);
         } catch (Exception e) {
@@ -263,7 +333,7 @@ public class FXMLDocumentController implements Initializable {
             alert.setTitle("Error");
             alert.setHeaderText("Ha ocurrido un error!");
             alert.setContentText("La obtencion de datos ha fallado");
-            
+
             alert.showAndWait();
         }
     }
@@ -274,14 +344,14 @@ public class FXMLDocumentController implements Initializable {
         try {
             outStream.close();
             inStream.close();
-            
+
             streamConnection.close();
         } catch (Exception e) {
             Alert alert = new Alert(AlertType.ERROR);
             alert.setTitle("Error");
             alert.setHeaderText("Ha ocurrido un error!");
-            alert.setContentText("La conexión no se ha podido cerrar");
-            
+            alert.setContentText("La conexión no se ha podido cerrar o no hay conexiones para cerrar");
+
             alert.showAndWait();
         }
     }
@@ -291,51 +361,59 @@ public class FXMLDocumentController implements Initializable {
     public void conectarOBD() {
         try {
             streamConnection = (StreamConnection) Connector.open(url_disp);
-            
+
             outStream = streamConnection.openOutputStream();
             inStream = streamConnection.openInputStream();
-            
+
             new EchoOffCommand().run(inStream, outStream);
-            
+
             new LineFeedOffCommand().run(inStream, outStream);
-            
+
             new HeadersOffCommand().run(inStream, outStream);
-            
+
             new SelectProtocolCommand(ObdProtocols.AUTO).run(inStream, outStream);
-            
+
             RPMCommand rpm = new RPMCommand();
             rpm.run(inStream, outStream);
             /*La función getRPM() es propia de la clase RPMCommand. El formato del valor que devuelve es de
             tipo int (entero).*/
             gauge.getRpmGauge().setValue(rpm.getRPM());
-            
-            Platform.runLater(new Runnable() {
+
+            /*Platform.runLater(new Runnable() {
                 @Override
                 public void run() {
                     for (int i = 0; i < 10000; i++) {
                         try {
                             Thread.sleep(20);
-                            
+
                             gauge.getRpmGauge().setValue(rpm.getRPM());
                         } catch (InterruptedException ex) {
                             Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                 }
-            });
-            
+            });*/
             perma = new PermanentTroubleCodesCommand();
             perma.run(inStream, outStream);
             System.out.println("Estos son los codigos permanentes: " + perma.getFormattedResult());
-            
+
             pending = new PendingTroubleCodesCommand();
             pending.run(inStream, outStream);
             System.out.println("Estos son los codigos pendientes: " + pending.getFormattedResult());
-            
+
             mil = new DistanceMILOnCommand();
             mil.run(inStream, outStream);
-            System.out.println("Esta es la distancia recorrida con la luz MIL encendida: " + mil.getKm() + "Km");
-            
+            System.out.println("Esta es la distancia recorrida con la luz MIL encendida: " + mil.getKm() + " Km");
+
+            intake = new AirIntakeTemperatureCommand();
+            intake.run(inStream, outStream);
+
+            ambient = new AmbientAirTemperatureCommand();
+            ambient.run(inStream, outStream);
+
+            coolant = new EngineCoolantTemperatureCommand();
+            coolant.run(inStream, outStream);
+
         } catch (IOException ex) {
             Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InterruptedException ex) {
@@ -348,37 +426,41 @@ public class FXMLDocumentController implements Initializable {
     //Método que lista los servicios que soporta el dispositivo conectado(OBD)
     @FXML
     public void listaServ() {
+        itemsListaServ.clear();
+        
         try {
             url_disp = new String();
-            
+
             int i = listaDisp.getSelectionModel().getSelectedIndex();
-            
+
             RemoteDevice rd = (RemoteDevice) dispositivos.get(i);
-            
+
             nombreDisp = rd.getBluetoothAddress();
-            
+
             HiloBusquedaServ hilo = new HiloBusquedaServ(nombreDisp, url_disp);
-            
+
             hilo.start();
-            
+
             Platform.runLater(() -> {
                 barra_serv.setProgress(-1);
+                conn.setDisable(true);
             });
-            
+
             new Thread(new Runnable() {
                 @Override
                 public synchronized void run() {
                     try {
                         synchronized (url_disp) {
                             url_disp.wait();
-                            
+
                             Platform.runLater(() -> {
                                 barra_serv.setProgress(0.0);
-                                
+                                conn.setDisable(false);
+
                                 itemsListaServ.add(url_disp);
                                 listaServ.setItems(itemsListaServ);
                             });
-                            
+
                             url_disp = hilo.getServicio();
                         }
                     } catch (InterruptedException ex) {
@@ -386,7 +468,7 @@ public class FXMLDocumentController implements Initializable {
                         alert.setTitle("Error");
                         alert.setHeaderText("Ha ocurrido un error!");
                         alert.setContentText("La ejecución ha sido interrumpida inesperadamente");
-                        
+
                         alert.showAndWait();
                     }
                 }
@@ -397,7 +479,7 @@ public class FXMLDocumentController implements Initializable {
             alert.setHeaderText("Ha ocurrido un error!");
             alert.setContentText("No ha seleccionado ningún dispositivo para establacer la conexión o el"
                     + " dispositivo no tiene el servicio requerido disponible");
-            
+
             alert.showAndWait();
         }
     }
@@ -405,59 +487,59 @@ public class FXMLDocumentController implements Initializable {
     //Método que lista los dispositivos bluetooth en rango
     @FXML
     public void listaDisp() {
+        itemsListaDisp.clear();
+        
         HiloBusquedaDisp hilo = new HiloBusquedaDisp(dispositivos);
-        
+
         hilo.start();
-        
+
         Platform.runLater(() -> {
             barra_disp.setProgress(-1);
             serv.setDisable(true);
-            
+
             itemsListaDisp = hilo.getLista();
-            
+
             listaDisp.setItems(itemsListaDisp);
         });
-        
+
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
                     synchronized (dispositivos) {
-                        
+
                         dispositivos.wait();
-                        
+
                         Platform.runLater(() -> {
                             barra_disp.setProgress(0.0);
                             serv.setDisable(false);
                         });
-                        
+
                         dispositivos = hilo.getDispositivos();
-                        
+
                     }
                 } catch (InterruptedException ex) {
                     Alert alert = new Alert(AlertType.ERROR);
                     alert.setTitle("Error");
                     alert.setHeaderText("Ha ocurrido un error!");
                     alert.setContentText("La ejecución ha sido interrumpida inesperadamente");
-                    
+
                     alert.showAndWait();
                 }
             }
         }, "You can name the thread here!").start();
     }
-    
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         dispositivos = new ArrayList();
-        
-        listaDisp.setItems(itemsListaDisp);
 
         //Se prepara el panel que contiene los relojes y gráficas
         fondoRPM.setBackground(new Background(new BackgroundFill(Gauge.DARK_COLOR, CornerRadii.EMPTY, Insets.EMPTY)));
-        
+
         gauge = new MedidorRPM();
-        
+
         panelRPM.getChildren().add(gauge);
     }
-    
+
 }

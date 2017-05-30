@@ -49,12 +49,17 @@ public class HiloBusquedaServ extends Thread {
 
                 servicio = l.get(2).toString();
             } catch (Exception e) {
-                Alert alert = new Alert(AlertType.ERROR);
-                alert.setTitle("Error");
-                alert.setHeaderText("Ha ocurrido un error!");
-                alert.setContentText("El dispositivo seleccionado no tiene el servicio requerido disponible");
+                Platform.runLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        Alert alert = new Alert(AlertType.ERROR);
+                        alert.setTitle("Error");
+                        alert.setHeaderText("Ha ocurrido un error!");
+                        alert.setContentText("El dispositivo seleccionado no tiene el servicio requerido disponible");
 
-                alert.showAndWait();
+                        alert.showAndWait();
+                    }
+                });
             }
         }
 
