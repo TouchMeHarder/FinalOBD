@@ -8,7 +8,7 @@
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="ProyectoOBD_Final_v1.jar" size="83946" download="eager" />
+    <jar href="ProyectoOBD_Final_v1.jar" size="86578" download="eager" />
     <jar href="lib\Medusa-7.9.jar" size="1464796" download="eager" />
     <jar href="lib\bluecove-2.1.1-SNAPSHOT.jar" size="663800" download="eager" />
     <jar href="lib\jasperreports-6.3.1.jar" size="5527829" download="eager" />

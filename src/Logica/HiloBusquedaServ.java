@@ -55,7 +55,7 @@ public class HiloBusquedaServ extends Thread {
                         Alert alert = new Alert(AlertType.ERROR);
                         alert.setTitle("Error");
                         alert.setHeaderText("Ha ocurrido un error!");
-                        alert.setContentText("El dispositivo seleccionado no tiene el servicio requerido disponible");
+                        alert.setContentText("El dispositivo seleccionado no tiene el servicio requerido disponible.");
 
                         alert.showAndWait();
                     }

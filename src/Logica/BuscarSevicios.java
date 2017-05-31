@@ -54,13 +54,7 @@ public class BuscarSevicios {
                         RemoteDevice rd = srs[j].getHostDevice();
                         DataElement serviceName = srs[j].getAttributeValue(URL);
 
-                        if (serviceName != null) {
-                            aux = serviceName.getValue() + "\n" + url;
-                            mapaResultado.get(rd.getBluetoothAddress()).add(url);
-                        } else {
-                            aux = "Sevicio desconocido \n" + url;
-                            mapaResultado.get(rd.getBluetoothAddress()).add(url);
-                        }
+                        mapaResultado.get(rd.getBluetoothAddress()).add(url);
                     }
                 }
 
