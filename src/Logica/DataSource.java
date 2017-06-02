@@ -23,11 +23,32 @@ public class DataSource implements JRDataSource {
 
     @Override
     public boolean next() throws JRException {
-        return false;
+        return true;
     }
 
     @Override
     public Object getFieldValue(JRField jrf) throws JRException {
+
+        if (jrf.getName().equals("matricula")) {
+            return valores.getMatricula();
+        } else if (jrf.getName().equals("nombre")) {
+            return valores.getNombre();
+        } else if (jrf.getName().equals("apellidos")) {
+            return valores.getApellidos();
+        } else if (jrf.getName().equals("luzMil")) {
+            return valores.getLuzMil();
+        } else if (jrf.getName().equals("perma")) {
+            return valores.getPermanente();
+        } else if (jrf.getName().equals("pend")) {
+            return valores.getPendiente();
+        } else if (jrf.getName().equals("refrig")) {
+            return valores.getRefrigerante();
+        } else if (jrf.getName().equals("entrada")) {
+            return valores.getEntrada();
+        } else if (jrf.getName().equals("interior")) {
+            return valores.getInterior();
+        }
+
         return false;
     }
 }

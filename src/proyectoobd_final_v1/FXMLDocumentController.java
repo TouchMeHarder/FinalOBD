@@ -6,6 +6,7 @@
 package proyectoobd_final_v1;
 
 import Graficos.MedidorRPM;
+import Logica.DataSource;
 import Logica.DatosSim;
 import Logica.HiloBusquedaDisp;
 import Logica.HiloBusquedaServ;
@@ -23,19 +24,22 @@ import com.github.pires.obd.commands.temperature.AmbientAirTemperatureCommand;
 import com.github.pires.obd.commands.temperature.EngineCoolantTemperatureCommand;
 import com.github.pires.obd.enums.ObdProtocols;
 import eu.hansolo.medusa.Gauge;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.animation.AnimationTimer;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -55,10 +59,16 @@ import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.StackPane;
-import javafx.util.Duration;
 import javax.bluetooth.RemoteDevice;
 import javax.microedition.io.Connector;
 import javax.microedition.io.StreamConnection;
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
+import net.sf.jasperreports.view.JasperViewer;
 
 /**
  *
@@ -85,14 +95,22 @@ public class FXMLDocumentController implements Initializable {
     private AmbientAirTemperatureCommand ambient;
     private EngineCoolantTemperatureCommand coolant;
 
+    private RPMCommand rpm;
+
     private MedidorRPM gauge;
     private ArrayList dispositivos;
 
     private ArrayList mockRPM;
+    private ArrayList RPMReales;
 
     private String nombreDisp;
 
     private String url_disp;
+
+    private final String LOGS = "log.txt";
+    private FileWriter fWriter;
+    private BufferedWriter out;
+    private PrintWriter pWriter;
 
     private ObservableList<String> itemsListaDisp = FXCollections.observableArrayList();
     private ObservableList<String> itemsListaServ = FXCollections.observableArrayList();
@@ -146,7 +164,15 @@ public class FXMLDocumentController implements Initializable {
 
     @FXML
     public void salir() {
-        System.exit(0);
+        try {
+            pWriter.close();
+            out.close();
+            fWriter.close();
+
+            System.exit(0);
+        } catch (IOException ex) {
+            Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     //Método que obtiene los valores del fichero, que se guardan en una lista para ser representados más tarde
@@ -211,6 +237,8 @@ public class FXMLDocumentController implements Initializable {
                             grafica.notify();
                         }
                     } catch (Exception e) {
+                        e.printStackTrace();
+
                         Platform.runLater(new Runnable() {
                             @Override
                             public void run() {
@@ -266,6 +294,50 @@ public class FXMLDocumentController implements Initializable {
             alert.setContentText("No hay datos para poder realizar el test.");
 
             alert.showAndWait();
+        }
+    }
+
+    @FXML
+    public void vistaPrevia() {
+
+        try {
+            Map m = new HashMap();
+
+            String jasperReport = "/Recursos/PDF.jasper";
+
+            JasperPrint jasperPrint = JasperFillManager.fillReport(FXMLDocumentController.class.getResourceAsStream("/Recursos/PDF.jasper"), m, new DataSource(this.valores));
+            JasperViewer.viewReport(jasperPrint, false);
+        } catch (JRException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @FXML
+    public void obtenerRPM() {
+        RPMReales = new ArrayList();
+        try {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Platform.runLater(() -> {
+                        for (int i = 0; i < 400; i++) {
+                            try {
+                                rpm.run(inStream, outStream);
+                                RPMReales.add(rpm.getRPM());
+                                gauge.getRpmGauge().setValue(Double.parseDouble(RPMReales.get(i).toString()));
+                                Thread.sleep(10);
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+                            } catch (IOException ex) {
+                                Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                    });
+                }
+            }).start();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -413,27 +485,24 @@ public class FXMLDocumentController implements Initializable {
 
             new SelectProtocolCommand(ObdProtocols.AUTO).run(inStream, outStream);
 
-            RPMCommand rpm = new RPMCommand();
-            rpm.run(inStream, outStream);
-
             /*La función getRPM() es propia de la clase RPMCommand. El formato del valor que devuelve es de
             tipo int (entero).*/
-            int val = rpm.getRPM();
-            
+ /*int val = rpm.getRPM();
+
             gauge.getRpmGauge().setValue(val);
-            
+
             Timer timer = new Timer();
-            
+
             TimerTask task = new TimerTask() {
                 @Override
                 public void run() {
                     gauge.getRpmGauge().setValue(rpm.getRPM());
                 }
             };
-            
-            timer.schedule(task, 10, 100);
-            
-            /*Platform.runLater(()->{
+
+            timer.schedule(task, 10, 100);*/
+
+ /*Platform.runLater(()->{
                 for (int i = 0; i < 200; i++) {
                     try {
                         Thread.sleep(100);
@@ -443,8 +512,7 @@ public class FXMLDocumentController implements Initializable {
                     System.out.println(val);
                 }
             });*/
-            
-            /*new Thread(new Runnable() {
+ /*new Thread(new Runnable() {
                 @Override
                 public void run() {
                    
@@ -466,6 +534,13 @@ public class FXMLDocumentController implements Initializable {
                 }
             }).start();*/
             try {
+                rpm = new RPMCommand();
+                rpm.run(inStream, outStream);
+            } catch (Exception e) {
+
+            }
+
+            try {
                 perma = new PermanentTroubleCodesCommand();
                 perma.run(inStream, outStream);
             } catch (Exception e) {
@@ -486,13 +561,12 @@ public class FXMLDocumentController implements Initializable {
 
             }
 
-            try {
+            /*try {
                 intake = new AirIntakeTemperatureCommand();
                 intake.run(inStream, outStream);
             } catch (Exception e) {
 
-            }
-
+            }*/
             try {
                 ambient = new AmbientAirTemperatureCommand();
                 ambient.run(inStream, outStream);
@@ -504,7 +578,7 @@ public class FXMLDocumentController implements Initializable {
                 coolant = new EngineCoolantTemperatureCommand();
                 coolant.run(inStream, outStream);
             } catch (Exception e) {
-
+                e.printStackTrace();
             }
 
         } catch (IOException ex) {
@@ -661,6 +735,17 @@ public class FXMLDocumentController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        try {
+            //Se inicializa los objetos de escritura para que se guarden las excepciones en un fichero de logs
+            fWriter = new FileWriter(LOGS, true);
+
+            out = new BufferedWriter(fWriter);
+
+            pWriter = new PrintWriter(out, true);
+        } catch (IOException ex) {
+            Logger.getLogger(FXMLDocumentController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
         valores = new Valores();
 
         dispositivos = new ArrayList();

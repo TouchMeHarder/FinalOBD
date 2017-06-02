@@ -12,7 +12,7 @@ import java.util.ArrayList;
  * @author practicas
  */
 public class Valores {
-    
+
     private String luzMil;
     private String permanente;
     private String pendiente;
@@ -21,6 +21,7 @@ public class Valores {
     private String interior;
     private String matricula;
     private String nombre;
+    private String apellidos;
 
     public Valores() {
         luzMil = "s/d";
@@ -31,6 +32,7 @@ public class Valores {
         interior = "s/d";
         matricula = "s/d";
         nombre = "s/d";
+        apellidos = "s/d";
     }
 
     public String getLuzMil() {
@@ -96,5 +98,13 @@ public class Valores {
     public void setNombre(String nombre) {
         this.nombre = nombre;
     }
-    
+
+    public String getApellidos() {
+        return apellidos;
+    }
+
+    public void setApellidos(String apellidos) {
+        this.apellidos = apellidos;
+    }
+
 }

@@ -8,11 +8,29 @@
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="ProyectoOBD_Final_v1.jar" size="86578" download="eager" />
+    <jar href="ProyectoOBD_Final_v1.jar" size="99357" download="eager" />
     <jar href="lib\Medusa-7.9.jar" size="1464796" download="eager" />
+    <jar href="lib\ant-1.7.1.jar" size="1323005" download="eager" />
+    <jar href="lib\antlr-2.7.5.jar" size="435563" download="eager" />
+    <jar href="lib\barbecue-1.5-beta1.jar" size="91079" download="eager" />
     <jar href="lib\bluecove-2.1.1-SNAPSHOT.jar" size="663800" download="eager" />
+    <jar href="lib\commons-beanutils-1.9.0.jar" size="230951" download="eager" />
+    <jar href="lib\commons-codec-1.5.jar" size="73098" download="eager" />
+    <jar href="lib\commons-collections-3.2.1.jar" size="575389" download="eager" />
+    <jar href="lib\commons-digester-2.1.jar" size="196768" download="eager" />
+    <jar href="lib\commons-javaflow-20060411.jar" size="96529" download="eager" />
+    <jar href="lib\commons-logging-1.1.1.jar" size="60841" download="eager" />
+    <jar href="lib\groovy-all-2.4.3.jar" size="6969675" download="eager" />
+    <jar href="lib\iText-2.1.7.js1.jar" size="1130550" download="eager" />
+    <jar href="lib\itextpdf-5.4.2.jar" size="2007621" download="eager" />
     <jar href="lib\jasperreports-6.3.1.jar" size="5527829" download="eager" />
+    <jar href="lib\jasperreports-fonts-6.3.1.jar" size="2478097" download="eager" />
+    <jar href="lib\jasperreports-javaflow-6.3.1.jar" size="5588071" download="eager" />
     <jar href="lib\obd-java-api-1.0-RC15.jar" size="72429" download="eager" />
+    <jar href="lib\xercesImpl-2.10.0.jar" size="1363159" download="eager" />
+    <jar href="lib\xml-apis-ext.jar" size="85686" download="eager" />
+    <jar href="lib\xml-apis.jar" size="220536" download="eager" />
+    <jar href="lib\xmlbeans-2.5.0.jar" size="2722970" download="eager" />
   </resources>
   <applet-desc  width="800" height="600" main-class="com.javafx.main.NoJavaFXFallback"  name="ProyectoOBD_Final_v1" >
     <param name="requiredFXVersion" value="8.0+"/>
